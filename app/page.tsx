@@ -118,7 +118,12 @@ export default function Home() {
         <p className="text-center">Find diamond</p>
       </div>
 
-      <div className={cn("grid gap-4", `grid-cols-${FIELDS_SIZE}`)}>
+      <div
+        className="grid gap-4"
+        style={{
+          gridTemplateColumns: `repeat(${FIELDS_SIZE}, 1fr)`,
+        }}
+      >
         {fields.map((field, index) => (
           <button
             key={index}
