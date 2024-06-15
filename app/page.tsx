@@ -62,6 +62,8 @@ export default function Home() {
      * 3. Return
      */
     if (newFields[index].isMine) {
+      const explosion = new Audio("./explosion.mpeg");
+      explosion.play();
       setGameOver(true);
 
       setFields((prevFields) =>
