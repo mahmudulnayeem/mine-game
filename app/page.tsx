@@ -1,113 +1,183 @@
+"use client";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { FIELDS_SIZE } from "~~/lib/constants";
+
+import { cn } from "~~/lib/utils";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "~~/components/ui/dialog";
 
 export default function Home() {
+  const [gameOver, setGameOver] = useState(false);
+  const [isGameClear, setIsGameClear] = useState(false);
+  /**
+   * The fields state is an array of objects that represent the game fields.
+   * Each field object has the following properties:
+   * 1. isOpen: A boolean that indicates whether the field is open or not
+   * 2. isMine: A boolean that indicates whether the field is a mine or not
+   * 3. isFlag: A boolean that indicates whether the field is flagged or not
+   * 4. answerByUser: A boolean that indicates whether the field is answered by the user or not
+   
+   */
+  const [fields, setFields] = useState(
+    Array.from({ length: FIELDS_SIZE * FIELDS_SIZE }).map(() => ({
+      isOpen: false,
+      isMine: false,
+      isFlag: false,
+      answerByUser: false,
+    }))
+  );
+
+  /**
+   *
+   * @param index
+   * @returns
+   * 1. If the game is over, return immediately
+   * 2. Create a new array of fields
+   * 3. Set the field at the index to open and answered by the user
+   * 4. If the field is a mine, set the game over state to true, set all fields to open, and return
+   * 5. Set the fields with the new fields
+   * 6. If all fields are open or all fields are mines, set the game clear state to true
+   *
+   */
+  const handleClicked = (index: number) => {
+    if (gameOver) return;
+
+    const newFields = [...fields];
+    newFields[index].isOpen = true;
+    newFields[index].answerByUser = true;
+
+    // check if the field is a mine or not
+    /**
+     * If the field is a mine, the game is over.
+     * 1. Set the game over state to true
+     * 2. Set all fields to open
+     * 3. Return
+     */
+    if (newFields[index].isMine) {
+      setGameOver(true);
+
+      setFields((prevFields) =>
+        prevFields.map((field) => ({
+          ...field,
+          isOpen: true,
+        }))
+      );
+      return;
+    }
+
+    setFields(newFields);
+
+    // check is game clear
+    if (newFields.every((field) => field.isOpen || field.isMine)) {
+      setIsGameClear(true);
+    }
+  };
+
+  /**
+   * The init function is responsible for initializing the game.
+   * 1. Create a set of mines
+   * 2. Add random numbers to the set until the set size is equal to the number of fields in the game
+   * 3. Set the fields with the mines in the random positions created in step 2
+   * 4. Mine are equal to the number of fields in the game
+   * @example
+   * FIELDS_SIZE = 4
+   * mines = [1, 3, 5, 7]
+   */
+
+  const init = () => {
+    const mines = new Set<number>();
+
+    while (mines.size < FIELDS_SIZE) {
+      mines.add(Math.floor(Math.random() * (FIELDS_SIZE * FIELDS_SIZE)));
+    }
+
+    setFields((prevFields) =>
+      prevFields.map((field, index) => ({
+        ...field,
+        isMine: mines.has(index),
+      }))
+    );
+  };
+
+  useEffect(() => {
+    init();
+  }, []);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className="flex min-h-screen flex-col items-center gap-10 sm:p-24 p-4">
+      <div className="w-full">
+        <h1 className="text-4xl font-bold text-center">Mine</h1>
+        <p className="text-center">Find diamond</p>
+      </div>
+
+      <div className={cn("grid gap-4", `grid-cols-${FIELDS_SIZE}`)}>
+        {fields.map((field, index) => (
+          <button
+            key={index}
+            className={cn(
+              "w-24 h-24 bg-gray-200 flex items-center justify-center rounded-md",
+
+              field.isOpen && field.isMine
+                ? "bg-red-500/20"
+                : field.answerByUser && "bg-green-500/20",
+              (gameOver || isGameClear) && "cursor-not-allowed"
+            )}
+            onClick={() => handleClicked(index)}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
+            {field.isOpen ? (
+              field.isMine ? (
+                <Image src="/bomb.svg" alt="bomb" width={40} height={40} />
+              ) : (
+                <Image src="/gem.svg" alt="gem" width={40} height={40} />
+              )
+            ) : (
+              ""
+            )}
+          </button>
+        ))}
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
+      {(isGameClear || gameOver) && (
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Game over</DialogTitle>
+              <DialogDescription>
+                Thank you for playing the game! Hope you enjoyed it!
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                onClick={() => {
+                  setGameOver(false);
+                  setIsGameClear(false);
+                  setFields(
+                    Array.from({ length: FIELDS_SIZE * FIELDS_SIZE }).map(
+                      () => ({
+                        isOpen: false,
+                        isMine: false,
+                        isFlag: false,
+                        answerByUser: false,
+                      })
+                    )
+                  );
+                  init();
+                }}
+              >
+                Restart
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </main>
   );
 }
