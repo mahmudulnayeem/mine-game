@@ -13,7 +13,7 @@ import {
   DialogTitle,
 } from "~~/components/ui/dialog";
 
-import { Volume2, VolumeX } from "lucide-react";
+import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -23,9 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~~/components/ui/select";
+import { Slider } from "~~/components/ui/slider";
 
 export default function Home() {
   const [sound, setSound] = useState(true);
+  const [volume, setVolume] = useState<number[]>([50]);
   const [gameOver, setGameOver] = useState(false);
   const [isGameWin, setIsGameWin] = useState(false);
   const [size, setSize] = useState(4);
@@ -76,12 +78,14 @@ export default function Home() {
     if (newFields[index].isMine) {
       if (sound) {
         const explosion = new Audio("./explosion.mpeg");
+        explosion.volume = volume[0] / 100;
         explosion.play();
       }
       // set timeout for the sound
       setTimeout(() => {
         if (sound) {
           const gameOverSound = new Audio("./game-over.wav");
+          gameOverSound.volume = volume[0] / 100;
           gameOverSound.play();
         }
       }, 1000);
@@ -98,6 +102,7 @@ export default function Home() {
     }
     if (sound) {
       const ClickSound = new Audio("./click.wav");
+      ClickSound.volume = volume[0] / 100;
       ClickSound.play();
     }
     setFields(newFields);
@@ -106,6 +111,7 @@ export default function Home() {
     if (newFields.every((field) => field.isOpen || field.isMine)) {
       if (sound) {
         const WinSound = new Audio("./win.wav");
+        WinSound.volume = volume[0] / 100;
         WinSound.play();
       }
       setIsGameWin(true);
@@ -147,10 +153,35 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center gap-10 sm:p-24 p-4">
       <div className="w-full flex flex-col items-center gap-4">
         <h1 className="text-4xl font-bold text-center">Mine</h1>
-        <div className="flex items-center gap-5">
-          <p className="text-center">Find diamond</p>
-          <button onClick={() => setSound((prev) => !prev)}>
-            {sound ? <Volume2 size={24} /> : <VolumeX size={24} />}
+
+        <p className="text-center">Find diamond</p>
+
+        <div className="w-4/12 flex items-center gap-3">
+          <Slider
+            value={volume}
+            onValueChange={(e) => {
+              setVolume(e);
+              e[0] > 0 ? setSound(true) : setSound(false);
+            }}
+          />
+          <span>{volume[0]}</span>
+          <button
+            onClick={() => {
+              setSound((prev) => !prev);
+              setVolume((prev) => (prev[0] > 0 ? [0] : [50]));
+            }}
+          >
+            {sound ? (
+              volume[0] <= 33 ? (
+                <Volume size={24} />
+              ) : volume[0] <= 66 ? (
+                <Volume1 size={24} />
+              ) : (
+                <Volume2 size={24} />
+              )
+            ) : (
+              <VolumeX size={24} />
+            )}
           </button>
         </div>
         <Select
