@@ -156,7 +156,7 @@ export default function Home() {
 
         <p className="text-center">Find diamond</p>
 
-        <div className="w-4/12 flex items-center gap-3">
+        <div className="w-full sm:w-4/12 flex items-center gap-3">
           <Slider
             value={volume}
             onValueChange={(e) => {
@@ -199,7 +199,7 @@ export default function Home() {
             init();
           }}
         >
-          <SelectTrigger className="w-56">
+          <SelectTrigger className="sm:w-56 w-full">
             <SelectValue placeholder="Select size of game field" />
           </SelectTrigger>
           <SelectContent>
