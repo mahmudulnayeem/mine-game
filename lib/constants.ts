@@ -1,1 +1,1 @@
-export const FIELDS_SIZE = 4;
+export const FIELDS_SIZE = 6;

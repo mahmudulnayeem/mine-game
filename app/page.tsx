@@ -1,7 +1,6 @@
 "use client";
 import Image from "next/image";
-import { useEffect, useState } from "react";
-import { FIELDS_SIZE } from "~~/lib/constants";
+import { useLayoutEffect, useState } from "react";
 
 import { cn } from "~~/lib/utils";
 
@@ -14,9 +13,20 @@ import {
   DialogTitle,
 } from "~~/components/ui/dialog";
 
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "~~/components/ui/select";
+
 export default function Home() {
   const [gameOver, setGameOver] = useState(false);
-  const [isGameClear, setIsGameClear] = useState(false);
+  const [isGameWin, setIsGameWin] = useState(false);
+  const [size, setSize] = useState(4);
   /**
    * The fields state is an array of objects that represent the game fields.
    * Each field object has the following properties:
@@ -27,7 +37,7 @@ export default function Home() {
    
    */
   const [fields, setFields] = useState(
-    Array.from({ length: FIELDS_SIZE * FIELDS_SIZE }).map(() => ({
+    Array.from({ length: size * size }).map(() => ({
       isOpen: false,
       isMine: false,
       isFlag: false,
@@ -64,6 +74,12 @@ export default function Home() {
     if (newFields[index].isMine) {
       const explosion = new Audio("./explosion.mpeg");
       explosion.play();
+      // set timeout for the sound
+      setTimeout(() => {
+        const gameOverSound = new Audio("./game-over.wav");
+        gameOverSound.play();
+      }, 1000);
+
       setGameOver(true);
 
       setFields((prevFields) =>
@@ -74,12 +90,15 @@ export default function Home() {
       );
       return;
     }
-
+    const ClickSound = new Audio("./click.wav");
+    ClickSound.play();
     setFields(newFields);
 
     // check is game clear
     if (newFields.every((field) => field.isOpen || field.isMine)) {
-      setIsGameClear(true);
+      const WinSound = new Audio("./win.wav");
+      WinSound.play();
+      setIsGameWin(true);
     }
   };
 
@@ -90,15 +109,15 @@ export default function Home() {
    * 3. Set the fields with the mines in the random positions created in step 2
    * 4. Mine are equal to the number of fields in the game
    * @example
-   * FIELDS_SIZE = 4
+   * size = 4
    * mines = [1, 3, 5, 7]
    */
 
   const init = () => {
     const mines = new Set<number>();
 
-    while (mines.size < FIELDS_SIZE) {
-      mines.add(Math.floor(Math.random() * (FIELDS_SIZE * FIELDS_SIZE)));
+    while (mines.size < size) {
+      mines.add(Math.floor(Math.random() * (size * size)));
     }
 
     setFields((prevFields) =>
@@ -109,33 +128,62 @@ export default function Home() {
     );
   };
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-10 sm:p-24 p-4">
-      <div className="w-full">
+      <div className="w-full flex flex-col items-center gap-4">
         <h1 className="text-4xl font-bold text-center">Mine</h1>
         <p className="text-center">Find diamond</p>
+        <Select
+          value={size.toString()}
+          onValueChange={(e) => {
+            setSize(parseInt(e));
+            setFields(
+              Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
+                isOpen: false,
+                isMine: false,
+                isFlag: false,
+                answerByUser: false,
+              }))
+            );
+            init();
+          }}
+        >
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="Select size of game field" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Sizes</SelectLabel>
+              <SelectItem value="2">Two</SelectItem>
+              <SelectItem value="3">Three</SelectItem>
+              <SelectItem value="4">Four</SelectItem>
+              <SelectItem value="5">Five</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </div>
 
       <div
         className="grid gap-4"
         style={{
-          gridTemplateColumns: `repeat(${FIELDS_SIZE}, 1fr)`,
+          gridTemplateColumns: `repeat(${size}, 1fr)`,
         }}
       >
         {fields.map((field, index) => (
           <button
             key={index}
             className={cn(
-              "w-24 h-24 bg-gray-200 flex items-center justify-center rounded-md",
+              "w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md",
 
               field.isOpen && field.isMine
                 ? "bg-red-500/20"
                 : field.answerByUser && "bg-green-500/20",
-              (gameOver || isGameClear) && "cursor-not-allowed"
+              (gameOver || isGameWin) && "cursor-not-allowed"
             )}
             onClick={() => handleClicked(index)}
           >
@@ -151,7 +199,42 @@ export default function Home() {
           </button>
         ))}
       </div>
-      {(isGameClear || gameOver) && (
+
+      {isGameWin && (
+        <Dialog open={true}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>
+                Congratulations! You have found all the diamond!
+              </DialogTitle>
+              <DialogDescription>
+                Thank you for playing the game! Hope you enjoyed it!
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <button
+                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                onClick={() => {
+                  setGameOver(false);
+                  setIsGameWin(false);
+                  setFields(
+                    Array.from({ length: size * size }).map(() => ({
+                      isOpen: false,
+                      isMine: false,
+                      isFlag: false,
+                      answerByUser: false,
+                    }))
+                  );
+                  init();
+                }}
+              >
+                Restart
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+      {gameOver && (
         <Dialog open={true}>
           <DialogContent>
             <DialogHeader>
@@ -165,16 +248,14 @@ export default function Home() {
                 className="bg-blue-500 text-white px-4 py-2 rounded-md"
                 onClick={() => {
                   setGameOver(false);
-                  setIsGameClear(false);
+                  setIsGameWin(false);
                   setFields(
-                    Array.from({ length: FIELDS_SIZE * FIELDS_SIZE }).map(
-                      () => ({
-                        isOpen: false,
-                        isMine: false,
-                        isFlag: false,
-                        answerByUser: false,
-                      })
-                    )
+                    Array.from({ length: size * size }).map(() => ({
+                      isOpen: false,
+                      isMine: false,
+                      isFlag: false,
+                      answerByUser: false,
+                    }))
                   );
                   init();
                 }}
