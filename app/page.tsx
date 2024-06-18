@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "~~/components/ui/dialog";
 
+import { Volume2, VolumeX } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -24,6 +25,7 @@ import {
 } from "~~/components/ui/select";
 
 export default function Home() {
+  const [sound, setSound] = useState(true);
   const [gameOver, setGameOver] = useState(false);
   const [isGameWin, setIsGameWin] = useState(false);
   const [size, setSize] = useState(4);
@@ -72,12 +74,16 @@ export default function Home() {
      * 3. Return
      */
     if (newFields[index].isMine) {
-      const explosion = new Audio("./explosion.mpeg");
-      explosion.play();
+      if (sound) {
+        const explosion = new Audio("./explosion.mpeg");
+        explosion.play();
+      }
       // set timeout for the sound
       setTimeout(() => {
-        const gameOverSound = new Audio("./game-over.wav");
-        gameOverSound.play();
+        if (sound) {
+          const gameOverSound = new Audio("./game-over.wav");
+          gameOverSound.play();
+        }
       }, 1000);
 
       setGameOver(true);
@@ -90,14 +96,18 @@ export default function Home() {
       );
       return;
     }
-    const ClickSound = new Audio("./click.wav");
-    ClickSound.play();
+    if (sound) {
+      const ClickSound = new Audio("./click.wav");
+      ClickSound.play();
+    }
     setFields(newFields);
 
     // check is game clear
     if (newFields.every((field) => field.isOpen || field.isMine)) {
-      const WinSound = new Audio("./win.wav");
-      WinSound.play();
+      if (sound) {
+        const WinSound = new Audio("./win.wav");
+        WinSound.play();
+      }
       setIsGameWin(true);
     }
   };
@@ -137,7 +147,12 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center gap-10 sm:p-24 p-4">
       <div className="w-full flex flex-col items-center gap-4">
         <h1 className="text-4xl font-bold text-center">Mine</h1>
-        <p className="text-center">Find diamond</p>
+        <div className="flex items-center gap-5">
+          <p className="text-center">Find diamond</p>
+          <button onClick={() => setSound((prev) => !prev)}>
+            {sound ? <Volume2 size={24} /> : <VolumeX size={24} />}
+          </button>
+        </div>
         <Select
           value={size.toString()}
           onValueChange={(e) => {
