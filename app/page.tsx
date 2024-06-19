@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "~~/components/ui/dialog";
 
+import { sendGAEvent } from "@next/third-parties/google";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 import {
   Select,
@@ -261,6 +262,10 @@ export default function Home() {
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md"
                 onClick={() => {
+                  sendGAEvent({
+                    event: "RestartWhenGameOver",
+                    value: "Restart when game is over",
+                  });
                   setGameOver(false);
                   setIsGameWin(false);
                   setFields(
@@ -293,6 +298,10 @@ export default function Home() {
               <button
                 className="bg-blue-500 text-white px-4 py-2 rounded-md"
                 onClick={() => {
+                  sendGAEvent({
+                    event: "RestartWhenGameWin",
+                    value: "Restart when game win",
+                  });
                   setGameOver(false);
                   setIsGameWin(false);
                   setFields(
