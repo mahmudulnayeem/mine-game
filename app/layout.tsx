@@ -1,6 +1,8 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Github } from "lucide-react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -40,7 +42,18 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <footer className="flex item-center justify-center">
+          <Link
+            href="https://github.com/mahmudulnayeem"
+            target="_blank"
+            className="flex items-center gap-1 hover:underline"
+          >
+            <Github size={24} /> <span>mahmudulnayeem</span>
+          </Link>
+        </footer>
+      </body>
       <GoogleAnalytics gaId="G-13M313N5LR" />
     </html>
   );
