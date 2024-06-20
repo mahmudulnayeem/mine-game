@@ -15,6 +15,7 @@ import {
 
 import { sendGAEvent } from "@next/third-parties/google";
 import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import { Label } from "~~/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -185,34 +186,37 @@ export default function Home() {
             )}
           </button>
         </div>
-        <Select
-          value={size.toString()}
-          onValueChange={(e) => {
-            setSize(parseInt(e));
-            setFields(
-              Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
-                isOpen: false,
-                isMine: false,
-                isFlag: false,
-                answerByUser: false,
-              }))
-            );
-            init();
-          }}
-        >
-          <SelectTrigger className="sm:w-56 w-full">
-            <SelectValue placeholder="Select size of game field" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Sizes</SelectLabel>
-              <SelectItem value="2">Two</SelectItem>
-              <SelectItem value="3">Three</SelectItem>
-              <SelectItem value="4">Four</SelectItem>
-              <SelectItem value="5">Five</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
+        <div className="sm:w-72 w-full">
+          <Label>Size of game field</Label>
+          <Select
+            value={size.toString()}
+            onValueChange={(e) => {
+              setSize(parseInt(e));
+              setFields(
+                Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
+                  isOpen: false,
+                  isMine: false,
+                  isFlag: false,
+                  answerByUser: false,
+                }))
+              );
+              init();
+            }}
+          >
+            <SelectTrigger className="sm:w-72 w-full">
+              <SelectValue placeholder="Select size of game field" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectLabel>Sizes</SelectLabel>
+                <SelectItem value="2">Two (2 X 2)</SelectItem>
+                <SelectItem value="3">Three (3 X 3)</SelectItem>
+                <SelectItem value="4">Four (4 X 4)</SelectItem>
+                <SelectItem value="5">Five (5 X 5)</SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div
