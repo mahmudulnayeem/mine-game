@@ -63,12 +63,17 @@ export default function Home() {
    * 6. If all fields are open or all fields are mines, set the game clear state to true
    *
    */
-  const handleClicked = (index: number) => {
+  const handleClicked = (index: number, fieldType: "diamond" | "flag") => {
     if (gameOver) return;
 
     const newFields = [...fields];
     newFields[index].isOpen = true;
     newFields[index].answerByUser = true;
+
+    if (fieldType === "flag") {
+      newFields[index].isFlag = true;
+      return;
+    }
 
     // check if the field is a mine or not
     /**

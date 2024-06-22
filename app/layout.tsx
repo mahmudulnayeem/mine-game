@@ -31,6 +31,14 @@ export const metadata: Metadata = {
     siteName: "Mine game",
     url: "https://mine-diamond.vercel.app/",
   },
+  twitter: {
+    card: "summary_large_image",
+    title: "Mine game",
+    images: [{ url: "/preview.webp" }],
+    description: "Find all the diamonds without stepping on a mine",
+    site: "@mine-diamond",
+    creator: "@yay_nayeem",
+  },
   icons:
     '[{"src":"/favicon.ico","sizes":"64x64 32x32 24x24 16x16","type":"image/x-icon"}]',
 };
