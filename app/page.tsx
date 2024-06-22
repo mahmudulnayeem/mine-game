@@ -13,9 +13,16 @@ import {
   DialogTitle,
 } from "~~/components/ui/dialog";
 
-import { sendGAEvent } from "@next/third-parties/google";
-import { Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~~/components/ui/popover";
+
 import { Label } from "~~/components/ui/label";
+
+import { sendGAEvent } from "@next/third-parties/google";
+
 import {
   Select,
   SelectContent,
@@ -26,6 +33,8 @@ import {
   SelectValue,
 } from "~~/components/ui/select";
 import { Slider } from "~~/components/ui/slider";
+
+import { RefreshCcw, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 
 export default function Home() {
   const [volume, setVolume] = useState<number[]>([50]);
@@ -52,6 +61,24 @@ export default function Home() {
     }))
   );
 
+  function gameWin(
+    fields: Array<{ isOpen: boolean; isMine: boolean; isFlag: boolean }>
+  ) {
+    const flags = fields.filter(
+      (field) => field.isOpen && !field.isMine && field.isFlag
+    );
+    if (flags.length !== size) return;
+
+    if (fields.every((field) => field.isOpen || field.isMine)) {
+      if (sound) {
+        const WinSound = new Audio("./win.wav");
+        WinSound.volume = volume[0] / 100;
+        WinSound.play();
+      }
+      setIsGameWin(true);
+    }
+  }
+
   /**
    *
    * @param index
@@ -73,6 +100,9 @@ export default function Home() {
 
     if (fieldType === "flag") {
       newFields[index].isFlag = true;
+      newFields[index].isMine = false;
+      setFields(newFields);
+      gameWin(newFields);
       return;
     }
 
@@ -115,15 +145,7 @@ export default function Home() {
     }
     setFields(newFields);
 
-    // check is game clear
-    if (newFields.every((field) => field.isOpen || field.isMine)) {
-      if (sound) {
-        const WinSound = new Audio("./win.wav");
-        WinSound.volume = volume[0] / 100;
-        WinSound.play();
-      }
-      setIsGameWin(true);
-    }
+    gameWin(newFields);
   };
 
   /**
@@ -190,14 +212,44 @@ export default function Home() {
             )}
           </button>
         </div>
-        <div className="sm:w-72 w-full">
-          <Label>Size of game field</Label>
-          <Select
-            value={size.toString()}
-            onValueChange={(e) => {
-              setSize(parseInt(e));
+        <div className="flex items-end gap-5">
+          <div className="sm:w-72 w-full">
+            <Label>Size of game field</Label>
+            <Select
+              value={size.toString()}
+              onValueChange={(e) => {
+                setSize(parseInt(e));
+                setFields(
+                  Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
+                    isOpen: false,
+                    isMine: false,
+                    isFlag: false,
+                    answerByUser: false,
+                  }))
+                );
+                init();
+              }}
+            >
+              <SelectTrigger className="sm:w-72 w-full">
+                <SelectValue placeholder="Select size of game field" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Sizes</SelectLabel>
+                  <SelectItem value="2">Two (2 X 2)</SelectItem>
+                  <SelectItem value="3">Three (3 X 3)</SelectItem>
+                  <SelectItem value="4">Four (4 X 4)</SelectItem>
+                  <SelectItem value="5">Five (5 X 5)</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+          <button
+            onClick={() => {
+              setGameOver(false);
+              setIsGameWin(false);
               setFields(
-                Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
+                Array.from({ length: size * size }).map(() => ({
                   isOpen: false,
                   isMine: false,
                   isFlag: false,
@@ -206,20 +258,10 @@ export default function Home() {
               );
               init();
             }}
+            className="pb-3"
           >
-            <SelectTrigger className="sm:w-72 w-full">
-              <SelectValue placeholder="Select size of game field" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectLabel>Sizes</SelectLabel>
-                <SelectItem value="2">Two (2 X 2)</SelectItem>
-                <SelectItem value="3">Three (3 X 3)</SelectItem>
-                <SelectItem value="4">Four (4 X 4)</SelectItem>
-                <SelectItem value="5">Five (5 X 5)</SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+            <RefreshCcw className="size-6" />
+          </button>
         </div>
       </div>
 
@@ -230,28 +272,52 @@ export default function Home() {
         }}
       >
         {fields.map((field, index) => (
-          <button
-            key={index}
-            className={cn(
-              "w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md",
+          <Popover key={index}>
+            <PopoverTrigger asChild>
+              <button
+                className={cn(
+                  "w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md",
+                  field.isOpen && field.answerByUser && "bg-green-500/20",
+                  field.isOpen && field.isMine && "bg-red-500/20",
+                  field.isOpen && field.isFlag && "bg-yellow-500/20",
+                  (gameOver || isGameWin) && "cursor-not-allowed"
+                )}
+              >
+                {field.isOpen ? (
+                  field.isMine ? (
+                    <Image src="/bomb.svg" alt="bomb" width={40} height={40} />
+                  ) : field.isFlag ? (
+                    <Image src="/flag.svg" alt="gem" width={40} height={40} />
+                  ) : (
+                    <Image src="/gem.svg" alt="gem" width={40} height={40} />
+                  )
+                ) : (
+                  ""
+                )}
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="flex justify-between w-full gap-5">
+              <button
+                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClicked(index, "flag");
+                }}
+              >
+                <Image src="/flag.svg" alt="flag" width={40} height={40} />
+              </button>
 
-              field.isOpen && field.isMine
-                ? "bg-red-500/20"
-                : field.answerByUser && "bg-green-500/20",
-              (gameOver || isGameWin) && "cursor-not-allowed"
-            )}
-            onClick={() => handleClicked(index, "diamond")}
-          >
-            {field.isOpen ? (
-              field.isMine ? (
-                <Image src="/bomb.svg" alt="bomb" width={40} height={40} />
-              ) : (
-                <Image src="/gem.svg" alt="gem" width={40} height={40} />
-              )
-            ) : (
-              ""
-            )}
-          </button>
+              <button
+                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClicked(index, "diamond");
+                }}
+              >
+                <Image src="/gem.svg" alt="diamond" width={40} height={40} />
+              </button>
+            </PopoverContent>
+          </Popover>
         ))}
       </div>
 
