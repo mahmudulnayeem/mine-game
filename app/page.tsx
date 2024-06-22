@@ -212,7 +212,7 @@ export default function Home() {
             )}
           </button>
         </div>
-        <div className="flex items-end gap-5">
+        <div className="flex items-end gap-5 w-full sm:w-72">
           <div className="sm:w-72 w-full">
             <Label>Size of game field</Label>
             <Select
