@@ -28,11 +28,12 @@ import {
 import { Slider } from "~~/components/ui/slider";
 
 export default function Home() {
-  const [sound, setSound] = useState(true);
   const [volume, setVolume] = useState<number[]>([50]);
   const [gameOver, setGameOver] = useState(false);
   const [isGameWin, setIsGameWin] = useState(false);
   const [size, setSize] = useState(4);
+
+  const sound = volume[0] > 0;
   /**
    * The fields state is an array of objects that represent the game fields.
    * Each field object has the following properties:
@@ -168,13 +169,11 @@ export default function Home() {
             value={volume}
             onValueChange={(e) => {
               setVolume(e);
-              e[0] > 0 ? setSound(true) : setSound(false);
             }}
           />
           <span>{volume[0]}</span>
           <button
             onClick={() => {
-              setSound((prev) => !prev);
               setVolume((prev) => (prev[0] > 0 ? [0] : [50]));
             }}
           >
@@ -241,7 +240,7 @@ export default function Home() {
                 : field.answerByUser && "bg-green-500/20",
               (gameOver || isGameWin) && "cursor-not-allowed"
             )}
-            onClick={() => handleClicked(index)}
+            onClick={() => handleClicked(index, "diamond")}
           >
             {field.isOpen ? (
               field.isMine ? (
