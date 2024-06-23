@@ -36,6 +36,12 @@ import { Slider } from "~~/components/ui/slider";
 
 import { RefreshCcw, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
 
+const SIZES = [
+  { value: "2", label: "Two (2 X 2)" },
+  { value: "3", label: "Three (3 X 3)" },
+  { value: "4", label: "Four (4 X 4)" },
+  { value: "5", label: "Five (5 X 5)" },
+];
 export default function Home() {
   const [volume, setVolume] = useState<number[]>([50]);
   const [gameOver, setGameOver] = useState(false);
@@ -235,10 +241,11 @@ export default function Home() {
               <SelectContent>
                 <SelectGroup>
                   <SelectLabel>Sizes</SelectLabel>
-                  <SelectItem value="2">Two (2 X 2)</SelectItem>
-                  <SelectItem value="3">Three (3 X 3)</SelectItem>
-                  <SelectItem value="4">Four (4 X 4)</SelectItem>
-                  <SelectItem value="5">Five (5 X 5)</SelectItem>
+                  {SIZES.map((item) => (
+                    <SelectItem key={item.value} value={item.value}>
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
