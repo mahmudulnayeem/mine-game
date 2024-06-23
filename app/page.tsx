@@ -98,14 +98,6 @@ export default function Home() {
     newFields[index].isOpen = true;
     newFields[index].answerByUser = true;
 
-    if (fieldType === "flag") {
-      newFields[index].isFlag = true;
-      newFields[index].isMine = false;
-      setFields(newFields);
-      gameWin(newFields);
-      return;
-    }
-
     // check if the field is a mine or not
     /**
      * If the field is a mine, the game is over.
@@ -138,10 +130,17 @@ export default function Home() {
       );
       return;
     }
-    if (sound) {
-      const ClickSound = new Audio("./click.wav");
-      ClickSound.volume = volume[0] / 100;
-      ClickSound.play();
+
+    if (fieldType === "flag") {
+      newFields[index].isFlag = true;
+      newFields[index].isMine = false;
+    } else {
+      newFields[index].isFlag = false;
+      if (sound) {
+        const ClickSound = new Audio("./click.wav");
+        ClickSound.volume = volume[0] / 100;
+        ClickSound.play();
+      }
     }
     setFields(newFields);
 
