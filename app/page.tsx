@@ -102,8 +102,17 @@ export default function Home() {
 
     const newFields = [...fields];
     newFields[index].isOpen = true;
+    if (newFields[index].answerByUser) {
+      return;
+    }
     newFields[index].answerByUser = true;
-
+    if (fieldType === "flag") {
+      newFields[index].isFlag = true;
+      newFields[index].isMine = false;
+      setFields(newFields);
+      gameWin(newFields);
+      return;
+    }
     // check if the field is a mine or not
     /**
      * If the field is a mine, the game is over.
@@ -137,16 +146,10 @@ export default function Home() {
       return;
     }
 
-    if (fieldType === "flag") {
-      newFields[index].isFlag = true;
-      newFields[index].isMine = false;
-    } else {
-      newFields[index].isFlag = false;
-      if (sound) {
-        const ClickSound = new Audio("./click.wav");
-        ClickSound.volume = volume[0] / 100;
-        ClickSound.play();
-      }
+    if (sound) {
+      const ClickSound = new Audio("./click.wav");
+      ClickSound.volume = volume[0] / 100;
+      ClickSound.play();
     }
     setFields(newFields);
 
@@ -304,7 +307,7 @@ export default function Home() {
             </PopoverTrigger>
             <PopoverContent className="flex justify-between w-full gap-5">
               <button
-                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md"
+                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md hover:bg-yellow-500/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClicked(index, "flag");
@@ -314,7 +317,7 @@ export default function Home() {
               </button>
 
               <button
-                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md"
+                className="w-16 h-16 sm:w-24 sm:h-24 bg-gray-200 flex items-center justify-center rounded-md hover:bg-green-500/20"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClicked(index, "diamond");
