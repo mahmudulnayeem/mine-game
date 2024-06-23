@@ -8,6 +8,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://mine-diamond.vercel.app/"),
   title: "Mine game",
   description: "Mine game made with React and TypeScript",
   keywords: [
