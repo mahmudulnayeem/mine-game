@@ -4,18 +4,6 @@ This is a simple mine game project. You can play the game by clicking on the cel
 
 ![Mine Game](./public/preview.webp)
 
-<iframe
-  src="https://mine-diamond.vercel.app/"
-  title="Mine Game"
-  frameborder="0"
-  scrolling="no"
-  width="100%"
-  style="width:100%;aspect-ratio:16/9"
-  allow="accelerometer; autoplay; encrypted-media; fullscreen; gyroscope; picture-in-picture"
-  allowfullscreen=""
->
-</iframe>
-
 ## Getting Started
 
 First, pull the project from the repository:
