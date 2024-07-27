@@ -52,8 +52,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        {children}
-        <footer className="flex item-center justify-center">
+        <main className="h-[90vh] overflow-scroll ">{children}</main>
+        <footer className="flex sm:flex-row flex-col item-center justify-center sm:space-x-5 mt-8 ">
           <Link
             href="https://github.com/mahmudulnayeem"
             target="_blank"
@@ -61,6 +61,14 @@ export default function RootLayout({
           >
             <Github size={24} /> <span>mahmudulnayeem</span>
           </Link>
+          <div className="flex items-center space-x-5">
+            <Link href="/" className="hover:underline">
+              Mine game
+            </Link>
+            <Link href="/grid-lights" className="hover:underline">
+              Grid lights
+            </Link>
+          </div>
         </footer>
       </body>
       <GoogleAnalytics gaId="G-13M313N5LR" />

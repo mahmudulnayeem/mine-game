@@ -39,7 +39,7 @@ const GridLights = () => {
   };
 
   return (
-    <div className="flex min-h-[95vh] flex-col items-center gap-10 sm:p-24 p-4">
+    <div className="flex h-[90vh] flex-col items-center gap-10 sm:p-24 p-4">
       <div className="w-full flex flex-col items-center gap-4">
         <div className="flex  items-center ">
           <h1 className="text-4xl font-bold text-center">Grid lights</h1>

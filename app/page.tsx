@@ -19,22 +19,9 @@ import {
   PopoverTrigger,
 } from "~~/components/ui/popover";
 
-import { Label } from "~~/components/ui/label";
-
 import { sendGAEvent } from "@next/third-parties/google";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "~~/components/ui/select";
-import { Slider } from "~~/components/ui/slider";
-
-import { RefreshCcw, Volume, Volume1, Volume2, VolumeX } from "lucide-react";
+import { Settings } from "./_components/settings";
 
 const SIZES = [
   { value: "2", label: "Two (2 X 2)" },
@@ -42,13 +29,34 @@ const SIZES = [
   { value: "4", label: "Four (4 X 4)" },
   { value: "5", label: "Five (5 X 5)" },
 ];
+export type ConfigType = {
+  fieldSizes: Array<{ value: string; label: string }>;
+  size: number;
+  volume: number[];
+  fields: Array<{
+    isOpen: boolean;
+    isMine: boolean;
+    isFlag: boolean;
+    answerByUser: boolean;
+  }>;
+};
+const defaultConfig: ConfigType = {
+  fieldSizes: SIZES,
+  size: 4,
+  volume: [50],
+  fields: Array.from({ length: 4 * 4 }).map(() => ({
+    isOpen: false,
+    isMine: false,
+    isFlag: false,
+    answerByUser: false,
+  })),
+};
 export default function Home() {
-  const [volume, setVolume] = useState<number[]>([50]);
+  const [config, setConfig] = useState<ConfigType>(defaultConfig);
   const [gameOver, setGameOver] = useState(false);
   const [isGameWin, setIsGameWin] = useState(false);
-  const [size, setSize] = useState(4);
 
-  const sound = volume[0] > 0;
+  const sound = config.volume[0] > 0;
   /**
    * The fields state is an array of objects that represent the game fields.
    * Each field object has the following properties:
@@ -56,16 +64,7 @@ export default function Home() {
    * 2. isMine: A boolean that indicates whether the field is a mine or not
    * 3. isFlag: A boolean that indicates whether the field is flagged or not
    * 4. answerByUser: A boolean that indicates whether the field is answered by the user or not
-   
    */
-  const [fields, setFields] = useState(
-    Array.from({ length: size * size }).map(() => ({
-      isOpen: false,
-      isMine: false,
-      isFlag: false,
-      answerByUser: false,
-    }))
-  );
 
   function gameWin(
     fields: Array<{ isOpen: boolean; isMine: boolean; isFlag: boolean }>
@@ -73,12 +72,12 @@ export default function Home() {
     const flags = fields.filter(
       (field) => field.isOpen && !field.isMine && field.isFlag
     );
-    if (flags.length !== size) return;
+    if (flags.length !== config.size) return;
 
     if (fields.every((field) => field.isOpen || field.isMine)) {
       if (sound) {
         const WinSound = new Audio("./win.wav");
-        WinSound.volume = volume[0] / 100;
+        WinSound.volume = config.volume[0] / 100;
         WinSound.play();
       }
       setIsGameWin(true);
@@ -100,7 +99,7 @@ export default function Home() {
   const handleClicked = (index: number, fieldType: "diamond" | "flag") => {
     if (gameOver) return;
 
-    const newFields = [...fields];
+    const newFields = [...config.fields];
     newFields[index].isOpen = true;
     if (newFields[index].answerByUser) {
       return;
@@ -109,7 +108,10 @@ export default function Home() {
     if (fieldType === "flag") {
       newFields[index].isFlag = true;
       newFields[index].isMine = false;
-      setFields(newFields);
+      setConfig((prev) => ({
+        ...prev,
+        fields: newFields,
+      }));
       gameWin(newFields);
       return;
     }
@@ -123,35 +125,38 @@ export default function Home() {
     if (newFields[index].isMine) {
       if (sound) {
         const explosion = new Audio("./explosion.mpeg");
-        explosion.volume = volume[0] / 100;
+        explosion.volume = config.volume[0] / 100;
         explosion.play();
       }
       // set timeout for the sound
       setTimeout(() => {
         if (sound) {
           const gameOverSound = new Audio("./game-over.wav");
-          gameOverSound.volume = volume[0] / 100;
+          gameOverSound.volume = config.volume[0] / 100;
           gameOverSound.play();
         }
       }, 1000);
 
       setGameOver(true);
-
-      setFields((prevFields) =>
-        prevFields.map((field) => ({
+      setConfig((prev) => ({
+        ...prev,
+        fields: newFields.map((field) => ({
           ...field,
           isOpen: true,
-        }))
-      );
+        })),
+      }));
       return;
     }
 
     if (sound) {
       const ClickSound = new Audio("./click.wav");
-      ClickSound.volume = volume[0] / 100;
+      ClickSound.volume = config.volume[0] / 100;
       ClickSound.play();
     }
-    setFields(newFields);
+    setConfig((prev) => ({
+      ...prev,
+      fields: newFields,
+    }));
 
     gameWin(newFields);
   };
@@ -168,18 +173,21 @@ export default function Home() {
    */
 
   const init = () => {
+    setGameOver(false);
+    setIsGameWin(false);
     const mines = new Set<number>();
 
-    while (mines.size < size) {
-      mines.add(Math.floor(Math.random() * (size * size)));
+    while (mines.size < config.size) {
+      mines.add(Math.floor(Math.random() * (config.size * config.size)));
     }
 
-    setFields((prevFields) =>
-      prevFields.map((field, index) => ({
+    setConfig((prev) => ({
+      ...prev,
+      fields: prev.fields.map((field, index) => ({
         ...field,
         isMine: mines.has(index),
-      }))
-    );
+      })),
+    }));
   };
 
   useLayoutEffect(() => {
@@ -188,99 +196,27 @@ export default function Home() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center gap-10 sm:p-24 p-4">
+    <div className="flex  flex-col items-center gap-10 sm:p-16 p-4">
       <div className="w-full flex flex-col items-center gap-4">
-        <h1 className="text-4xl font-bold text-center">Mine</h1>
-
-        <p className="text-center">Find diamond</p>
-
-        <div className="w-full sm:w-4/12 flex items-center gap-3">
-          <Slider
-            value={volume}
-            onValueChange={(e) => {
-              setVolume(e);
-            }}
+        <div className="flex  items-center ">
+          <h1 className="text-4xl font-bold text-center">Mine</h1>
+          <Settings
+            config={config}
+            setConfig={setConfig}
+            defaultConfig={defaultConfig}
+            init={init}
           />
-          <span>{volume[0]}</span>
-          <button
-            onClick={() => {
-              setVolume((prev) => (prev[0] > 0 ? [0] : [50]));
-            }}
-          >
-            {sound ? (
-              volume[0] <= 33 ? (
-                <Volume size={24} />
-              ) : volume[0] <= 66 ? (
-                <Volume1 size={24} />
-              ) : (
-                <Volume2 size={24} />
-              )
-            ) : (
-              <VolumeX size={24} />
-            )}
-          </button>
         </div>
-        <div className="flex items-end gap-5 w-full sm:w-72">
-          <div className="sm:w-72 w-full">
-            <Label>Size of game field</Label>
-            <Select
-              value={size.toString()}
-              onValueChange={(e) => {
-                setSize(parseInt(e));
-                setFields(
-                  Array.from({ length: parseInt(e) * parseInt(e) }).map(() => ({
-                    isOpen: false,
-                    isMine: false,
-                    isFlag: false,
-                    answerByUser: false,
-                  }))
-                );
-                init();
-              }}
-            >
-              <SelectTrigger className="sm:w-72 w-full">
-                <SelectValue placeholder="Select size of game field" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Sizes</SelectLabel>
-                  {SIZES.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <button
-            onClick={() => {
-              setGameOver(false);
-              setIsGameWin(false);
-              setFields(
-                Array.from({ length: size * size }).map(() => ({
-                  isOpen: false,
-                  isMine: false,
-                  isFlag: false,
-                  answerByUser: false,
-                }))
-              );
-              init();
-            }}
-            className="pb-3"
-          >
-            <RefreshCcw className="size-6" />
-          </button>
-        </div>
+        <p className="text-center">Find diamond</p>
       </div>
 
       <div
         className="grid gap-4"
         style={{
-          gridTemplateColumns: `repeat(${size}, 1fr)`,
+          gridTemplateColumns: `repeat(${config.size}, 1fr)`,
         }}
       >
-        {fields.map((field, index) => (
+        {config.fields.map((field, index) => (
           <Popover key={index}>
             <PopoverTrigger asChild>
               <button
@@ -351,14 +287,17 @@ export default function Home() {
                   });
                   setGameOver(false);
                   setIsGameWin(false);
-                  setFields(
-                    Array.from({ length: size * size }).map(() => ({
+                  setConfig((prev) => ({
+                    ...prev,
+                    fields: Array.from({
+                      length: prev.size * prev.size,
+                    }).map(() => ({
                       isOpen: false,
                       isMine: false,
                       isFlag: false,
                       answerByUser: false,
-                    }))
-                  );
+                    })),
+                  }));
                   init();
                 }}
               >
@@ -387,14 +326,17 @@ export default function Home() {
                   });
                   setGameOver(false);
                   setIsGameWin(false);
-                  setFields(
-                    Array.from({ length: size * size }).map(() => ({
+                  setConfig((prev) => ({
+                    ...prev,
+                    fields: Array.from({
+                      length: prev.size * prev.size,
+                    }).map(() => ({
                       isOpen: false,
                       isMine: false,
                       isFlag: false,
                       answerByUser: false,
-                    }))
-                  );
+                    })),
+                  }));
                   init();
                 }}
               >
@@ -404,6 +346,6 @@ export default function Home() {
           </DialogContent>
         </Dialog>
       )}
-    </main>
+    </div>
   );
 }
